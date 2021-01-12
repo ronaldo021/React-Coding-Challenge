@@ -47,4 +47,4 @@ To test to make sure your code is working as intended, make sure you try the two
 
 ## Post challenge
 
-After you're done, create a Github repo by the name of `${your_name}-${todays_date}-fe-coding-challenge`, commit your changes, push to your GitHub and send us a link.
+After you're done, create a Github repo by the name of `${your_name}-${todays_date}-React-Coding-Challenge`, commit your changes, push to your GitHub and send us a link.
