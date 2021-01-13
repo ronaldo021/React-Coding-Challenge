@@ -1,7 +1,7 @@
 import React, {FC} from 'react';
 import {connect} from 'react-redux';
 
-import {RootState, UserInputType} from 'types';
+import {RootState, UserInputType, JournalType} from 'types';
 import {dateToString, toCSV} from 'utils';
 
 interface Balance {
@@ -64,6 +64,57 @@ export default connect(
     let balance: Balance[] = [];
 
     /* YOUR CODE GOES HERE */
+    const {userInput, accounts, journalEntries} = state;
+    if (
+      accounts.length > 0 &&
+      journalEntries.length > 0 &&
+      userInput.format &&
+      userInput.startAccount &&
+      userInput.endPeriod
+    ) {
+      const {startAccount, endPeriod} = userInput;
+      const endAccount = userInput.endAccount || accounts[accounts.length - 1].ACCOUNT;
+      const startPeriod =
+        userInput.startPeriod && !isNaN(userInput.startPeriod.getTime())
+          ? userInput.startPeriod
+          : journalEntries[0].PERIOD;
+
+      const filteredJournalEntries = journalEntries
+        .filter(
+          (entry) =>
+            entry.PERIOD >= startPeriod &&
+            entry.PERIOD <= endPeriod &&
+            entry.ACCOUNT >= startAccount &&
+            entry.ACCOUNT <= endAccount,
+        )
+        .reduce((acc: any, currentEntry: JournalType) => {
+          acc[currentEntry.ACCOUNT.toString()] = [...(acc[currentEntry.ACCOUNT.toString()] || []), currentEntry];
+          return acc;
+        }, {});
+
+      balance = accounts
+        .filter(
+          (account) =>
+            account.ACCOUNT >= startAccount &&
+            account.ACCOUNT <= endAccount &&
+            Object.keys(filteredJournalEntries).includes(account.ACCOUNT.toString()),
+        )
+        .map((account) => {
+          const jEntries = filteredJournalEntries[account.ACCOUNT.toString()] || [];
+
+          const debit = jEntries.reduce((acc: number, cur: JournalType) => acc + cur.DEBIT, 0);
+          const credit = jEntries.reduce((acc: number, cur: JournalType) => acc + cur.CREDIT, 0);
+
+          const entry: Balance = {
+            ACCOUNT: account.ACCOUNT.toString(),
+            DESCRIPTION: account.LABEL,
+            DEBIT: debit,
+            CREDIT: credit,
+            BALANCE: debit - credit,
+          };
+          return entry;
+        });
+    }
 
     const totalCredit = balance.reduce((acc, entry) => acc + entry.CREDIT, 0);
     const totalDebit = balance.reduce((acc, entry) => acc + entry.DEBIT, 0);
